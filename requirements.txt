@@ -1,0 +1,26 @@
+# FastAPI and server
+fastapi>=0.104.0
+uvicorn>=0.23.2
+python-multipart>=0.0.6
+pydantic>=2.4.2
+
+# ML dependencies
+torch>=2.0.0
+torchaudio>=2.0.0
+transformers>=4.34.0
+librosa>=0.10.0
+numpy>=1.24.0
+soundfile>=0.12.1
+huggingface_hub>=0.16.0
+
+
+# File and data handling
+python-dotenv>=1.0.0
+uuid>=1.30
+
+# For background processing (Phase 2)
+# celery>=5.3.4
+# redis>=5.0.1
+
+# Optional: For precise alignment
+# montreal-forced-aligner
