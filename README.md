@@ -1,6 +1,6 @@
 # Audio Transcription & Translation API
 
-A powerful API service for transcribing audio in English and Kinyarwanda, with bidirectional translation and caption generation capabilities.
+An API service for transcribing audio in English and Kinyarwanda, with bidirectional translation and caption generation capabilities.
 
 ## Features
 
