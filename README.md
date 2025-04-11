@@ -53,8 +53,8 @@ A powerful API service for transcribing audio in English and Kinyarwanda, with b
 1. Clone the repository:
 
 ```bash
-git clone https://github.com/your-repo/audio-transcription-api.git
-cd audio-transcription-api
+git clone https://github.com/yuyunfrancis/asr_api_kin_to_en.git
+cd asr_api_kin_to_en
 ```
 
 2. Create and activate a virtual environment:
@@ -107,8 +107,8 @@ mkdir -p models_cache temp_files
 1. Clone the repository:
 
 ```bash
-git clone https://github.com/your-repo/audio-transcription-api.git
-cd audio-transcription-api
+git clone https://github.com/yuyunfrancis/asr_api_kin_to_en.git
+cd asr_api_kin_to_en
 ```
 
 2. Create necessary directories:
@@ -382,10 +382,13 @@ The API is designed to support additional languages by:
 2. Updating the `LANGUAGE_CODES` mapping
 3. Implementing language-specific processing in the services
 
-## License
+## Acknowledgments
 
-[Specify your license here]
+- [MbazaNLP](https://huggingface.co/mbazaNLP) for the Kinyarwanda models
+- [OpenAI](https://github.com/openai/whisper) for the Whisper model
+- [NVIDIA](https://github.com/NVIDIA/NeMo) for the NeMo toolkit
+- [Hugging Face](https://huggingface.co/) for model hosting and transformers library
 
 ## Contact
 
-For support or inquiries, please contact [your contact information].
+For support or inquiries, please contact [francisberi04@gmail.com].
