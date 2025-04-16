@@ -71,6 +71,12 @@ sudo apt-get install build-essential python3-dev python3-pip
 pip install "nemo_toolkit[all]"
 ```
 
+To use nemo, make sure to login as it is gated
+
+```bash
+huggingface-cli login
+```
+
 3. Install dependencies:
 
 ```bash
