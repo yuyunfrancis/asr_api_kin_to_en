@@ -143,7 +143,7 @@ async def transcribe_with_whisper_model(
                 predicted_ids = model.generate(
                     input_features,
                     attention_mask=attention_mask,
-                    decoder_input_ids=prompt_ids,  # Use decoder_input_ids instead of forced_decoder_ids
+                    decoder_input_ids=prompt_ids,  
                     num_beams=5,
                     max_length=256,
                     min_length=1,
