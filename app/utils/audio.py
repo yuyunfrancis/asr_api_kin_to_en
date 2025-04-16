@@ -175,3 +175,66 @@ def remove_duplicates(chunks: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
             processed_chunks.append(current_chunk)
     
     return processed_chunks
+
+def align_nemo_with_whisper(nemo_text: str, whisper_chunks: list, audio_duration: float = None) -> list:
+    """
+    Align NeMo transcription text with Whisper chunks/timestamps
+    Using dynamic text alignment algorithms for better matching
+    
+    Args:
+        nemo_text: Text from NeMo transcription
+        whisper_chunks: Chunks from Whisper transcription
+        audio_duration: Duration of audio in seconds
+        
+    Returns:
+        List of aligned chunks
+    """
+    # If we only have one Whisper chunk, use it with NeMo text
+    if len(whisper_chunks) <= 1:
+        if audio_duration:
+            end_time = audio_duration
+        elif whisper_chunks:
+            end_time = whisper_chunks[0]["end_time"]
+        else:
+            end_time = 0.0
+            
+        return [{
+            "start_time": 0.0,
+            "end_time": end_time,
+            "text": nemo_text
+        }]
+    
+    # Split nemo_text into words
+    nemo_words = nemo_text.split()
+    
+    # Count words in Whisper chunks
+    whisper_word_counts = [len(chunk["text"].split()) for chunk in whisper_chunks]
+    total_whisper_words = sum(whisper_word_counts)
+    
+    # Basic proportional distribution
+    word_ratios = [count / total_whisper_words for count in whisper_word_counts]
+    
+    # Distribute NeMo words to chunks based on word ratios
+    aligned_chunks = []
+    start_idx = 0
+    
+    for i, chunk in enumerate(whisper_chunks):
+        # Calculate how many words should go in this chunk
+        if i == len(whisper_chunks) - 1:
+            # Last chunk gets all remaining words
+            chunk_words = nemo_words[start_idx:]
+        else:
+            # Distribute proportionally
+            word_count = max(1, int(len(nemo_words) * word_ratios[i]))
+            end_idx = min(start_idx + word_count, len(nemo_words))
+            chunk_words = nemo_words[start_idx:end_idx]
+            start_idx = end_idx
+        
+        if chunk_words:
+            aligned_chunks.append({
+                "start_time": chunk["start_time"],
+                "end_time": chunk["end_time"],
+                "text": " ".join(chunk_words)
+            })
+    
+    return aligned_chunks

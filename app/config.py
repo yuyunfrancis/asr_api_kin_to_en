@@ -49,3 +49,11 @@ USE_GPU = os.getenv("USE_GPU", "True").lower() == "true" and gpu_available
 # Make sure output directories exist
 os.makedirs(TEMP_FILE_DIR, exist_ok=True)
 os.makedirs(MODELS_CACHE_DIR, exist_ok=True)
+
+REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
+REDIS_PORT = int(os.getenv("REDIS_PORT", "6379"))
+REDIS_DB = int(os.getenv("REDIS_DB", "0"))
+REDIS_CACHE_DB = int(os.getenv("REDIS_CACHE_DB", "1"))
+
+# Model caching
+MAX_MODEL_CACHE_SIZE = int(os.getenv("MAX_MODEL_CACHE_SIZE", "3"))

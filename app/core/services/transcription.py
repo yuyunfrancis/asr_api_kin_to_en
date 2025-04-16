@@ -65,19 +65,9 @@ async def transcribe_with_whisper_model(
     language: str = "sw", 
     chunk_size_seconds: int = 10, 
     overlap_seconds: int = 5
-) -> Tuple[List[Dict[str, Any]], float]:
+):
     """
     Enhanced transcription using the Whisper model with advanced techniques
-    Note: Uses 'sw' (Swahili) for Kinyarwanda since the model was fine-tuned that way
-    
-    Args:
-        audio_path: Path to audio file
-        language: Language code
-        chunk_size_seconds: Size of audio chunks in seconds
-        overlap_seconds: Overlap between chunks in seconds
-        
-    Returns:
-        Tuple of transcription chunks and processing time
     """
     start_time = time.time()
     logger.info(f"Transcribing with Whisper model: language={language}, chunk_size={chunk_size_seconds}s, overlap={overlap_seconds}s")
@@ -91,8 +81,8 @@ async def transcribe_with_whisper_model(
     # Load model
     processor, model = load_whisper_model(model_path)
     
-    # Set language and task based on model documentation
-    model.config.forced_decoder_ids = processor.get_decoder_prompt_ids(language=language, task="transcribe")
+    # IMPORTANT: Don't set forced_decoder_ids on model.config
+    # Instead, create decoder_input_ids for each generation call
     
     # Load and preprocess audio
     logger.info(f"Loading audio file: {audio_path}")
@@ -129,7 +119,7 @@ async def transcribe_with_whisper_model(
         # Process the chunk
         input_features = processor(chunk_audio, sampling_rate=16000, return_tensors="pt").input_features
         
-        # Create attention mask (important for model focus)
+        # Create attention mask
         attention_mask = torch.ones(input_features.shape[:-1], dtype=torch.long)
         
         # Move to GPU if available
@@ -140,16 +130,27 @@ async def transcribe_with_whisper_model(
         # Generate transcription
         try:
             with torch.no_grad():
+                # Get the token IDs for the decoder prompt
+                prompt_ids = processor.tokenizer.encode(
+                    f"<|{language}|> <|transcribe|>",
+                    add_special_tokens=False,
+                    return_tensors="pt"
+                )
+                
+                if config.gpu_available:
+                    prompt_ids = prompt_ids.to("cuda")
+                
                 predicted_ids = model.generate(
                     input_features,
                     attention_mask=attention_mask,
-                    num_beams=5,              
-                    max_length=256,            
-                    min_length=1,             
-                    length_penalty=1.0,         
-                    repetition_penalty=1.2,    
-                    no_repeat_ngram_size=3,    
-                    early_stopping=True        
+                    decoder_input_ids=prompt_ids,  # Use decoder_input_ids instead of forced_decoder_ids
+                    num_beams=5,
+                    max_length=256,
+                    min_length=1,
+                    length_penalty=1.0,
+                    repetition_penalty=1.2,
+                    no_repeat_ngram_size=3,
+                    early_stopping=True
                 )
             
             chunk_transcription = processor.batch_decode(predicted_ids, skip_special_tokens=True)[0]
@@ -164,7 +165,7 @@ async def transcribe_with_whisper_model(
         except Exception as e:
             logger.error(f"Error transcribing chunk {start_time_sec:.2f}s-{end_time_sec:.2f}s: {e}")
     
-    # Sort chunks by start time (important for proper order)
+    # Sort chunks by start time
     chunks.sort(key=lambda x: x["start_time"])
     
     # Process chunks to remove duplicates

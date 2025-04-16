@@ -10,6 +10,7 @@ from app import config
 from app.core.schemas.requests import LanguageEnum, ModelTypeEnum, TranslationOptions, CaptionOptions
 from app.core.services.job_storage import create_job, update_job, get_job, serialize_job
 from app.utils.file_utils import save_upload_file, clean_temp_file
+from app.workers.tasks import process_full_pipeline
 
 router = APIRouter()
 
@@ -89,23 +90,23 @@ async def process_audio(
         }
     )
     
-    # Start processing in background
+    # Use FastAPI's background_tasks instead of Celery
     background_tasks.add_task(
         process_full_pipeline,
-        job["job_id"],
-        file_path,
-        source_language,
-        transcription_model,
-        chunk_size,
-        overlap_size,
-        use_mfa,
-        translate,
-        target_language,
-        translation_model,
-        generate_captions,
-        caption_formats,
-        include_original,
-        include_translation
+        job_id=job["job_id"],
+        file_path=file_path,
+        source_language=source_language,
+        transcription_model=transcription_model,
+        chunk_size=chunk_size,
+        overlap_size=overlap_size,
+        use_mfa=use_mfa,
+        translate=translate,
+        target_language=target_language,
+        translation_model=translation_model,
+        generate_captions=generate_captions,
+        caption_formats=caption_formats,
+        include_original=include_original,
+        include_translation=include_translation
     )
     
     return serialize_job(job)

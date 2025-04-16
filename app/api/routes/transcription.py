@@ -15,12 +15,12 @@ from app.core.services.transcription import (
 )
 from app.core.services.job_storage import create_job, update_job, serialize_job
 from app.utils.file_utils import save_upload_file, clean_temp_file
+from app.workers.tasks import process_transcription
 
 router = APIRouter()
 
 @router.post("/transcribe", tags=["Transcription"])
 async def transcribe_audio(
-    background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
     language: LanguageEnum = Form(LanguageEnum.english),
     model_type: ModelTypeEnum = Form(ModelTypeEnum.whisper),
@@ -48,38 +48,18 @@ async def transcribe_audio(
         }
     )
     
-    # Handle synchronous vs asynchronous processing
-    if async_processing:
-        # Start transcription in background
-        background_tasks.add_task(
-            process_transcription,
-            job["job_id"],
-            file_path,
-            language,
-            model_type,
-            chunk_size,
-            overlap_size,
-            use_mfa
-        )
-        
-        return serialize_job(job)
-    else:
-        # Process synchronously
-        await process_transcription(
-            job["job_id"],
-            file_path,
-            language,
-            model_type,
-            chunk_size,
-            overlap_size,
-            use_mfa
-        )
-        
-        # Get updated job
-        from app.core.services.job_storage import get_job
-        updated_job = get_job(job["job_id"])
-        
-        return serialize_job(updated_job)
+    # Start transcription task
+    process_transcription.delay(
+        job_id=job["job_id"],
+        file_path=file_path,
+        language=language,
+        model_type=model_type,
+        chunk_size=chunk_size,
+        overlap_size=overlap_size,
+        use_mfa=use_mfa
+    )
+    
+    return serialize_job(job)
 
 async def process_transcription(
     job_id: str,

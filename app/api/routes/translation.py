@@ -4,12 +4,12 @@ from typing import List, Dict, Any, Optional
 from app.core.schemas.requests import TranslationRequest, LanguageEnum
 from app.core.services.translation import translate_text, translate_chunks
 from app.core.services.job_storage import create_job, update_job, get_job, serialize_job
+from app.workers.tasks import process_translation
 
 router = APIRouter()
 
 @router.post("/translate", tags=["Translation"])
 async def translate(
-    background_tasks: BackgroundTasks,
     request: TranslationRequest,
     async_processing: bool = Query(False, description="Process translation asynchronously")
 ):
@@ -26,35 +26,24 @@ async def translate(
         }
     )
     
-    # Handle synchronous vs asynchronous processing
-    if async_processing:
-        # Start translation in background
-        background_tasks.add_task(
-            process_translation,
-            job["job_id"],
-            request.text,
-            request.source_language,
-            request.target_language
-        )
-        
-        return serialize_job(job)
-    else:
-        # Process synchronously
-        await process_translation(
-            job["job_id"],
-            request.text,
-            request.source_language,
-            request.target_language
-        )
-        
-        # Get updated job
-        updated_job = get_job(job["job_id"])
-        
-        return serialize_job(updated_job)
+    # Start translation task - for text, create a simple chunk
+    chunks = [{
+        "text": request.text,
+        "start_time": 0.0,
+        "end_time": 0.0
+    }]
+    
+    process_translation.delay(
+        job_id=job["job_id"],
+        chunks=chunks,
+        source_language=request.source_language,
+        target_language=request.target_language
+    )
+    
+    return serialize_job(job)
 
 @router.post("/jobs/{job_id}/translate", tags=["Translation"])
 async def translate_job_results(
-    background_tasks: BackgroundTasks,
     job_id: str = Path(..., description="Source transcription job ID"),
     target_language: LanguageEnum = Body(..., description="Target language for translation")
 ):
@@ -89,13 +78,12 @@ async def translate_job_results(
         }
     )
     
-    # Start translation in background
-    background_tasks.add_task(
-        process_job_translation,
-        translation_job["job_id"],
-        chunks,
-        source_language,
-        target_language
+    # Start translation task
+    process_translation.delay(
+        job_id=translation_job["job_id"],
+        chunks=chunks,
+        source_language=source_language,
+        target_language=target_language
     )
     
     return serialize_job(translation_job)

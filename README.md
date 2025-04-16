@@ -64,6 +64,13 @@ python -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
 ```
 
+Make sure you have nemo toolkit installed
+
+```bash
+sudo apt-get install build-essential python3-dev python3-pip
+pip install "nemo_toolkit[all]"
+```
+
 3. Install dependencies:
 
 ```bash
@@ -103,6 +110,17 @@ mkdir -p models_cache temp_files
 - NVIDIA Container Toolkit (for GPU support)
 
 #### Installation Steps
+
+6. Install Redis server
+
+### Install Redis if not already installed
+
+- sudo apt update
+- sudo apt install redis-server
+
+### Start Redis service
+
+- sudo systemctl start redis
 
 1. Clone the repository:
 
@@ -304,6 +322,16 @@ async function checkJobStatus(jobId) {
   const response = await fetch(`http://localhost:8000/api/jobs/${jobId}`);
   return await response.json();
 }
+```
+
+Sample parameters to test
+
+```bash
+{"chunk_size": 10, "overlap_size": 5, "use_mfa": false}
+
+{"enabled": true, "target_language": "kinyarwanda"}
+
+{"enabled": true, "formats": ["srt", "vtt"]}
 ```
 
 ## Performance Optimization

@@ -10,12 +10,12 @@ from app.core.services.captions import (
 )
 from app.core.services.job_storage import create_job, update_job, get_job, serialize_job
 from app import config
+from app.workers.tasks import process_captions
 
 router = APIRouter()
 
 @router.post("/generate-captions", tags=["Captions"])
 async def generate_captions(
-    background_tasks: BackgroundTasks,
     job_id: str = Body(..., description="Source job ID (transcription or translation)"),
     include_original: bool = Body(True, description="Include original text in captions"),
     include_translation: bool = Body(True, description="Include translated text in captions"),
@@ -60,18 +60,16 @@ async def generate_captions(
         }
     )
     
-    # Start caption generation in background
-    background_tasks.add_task(
-        process_caption_generation,
-        caption_job["job_id"],
-        chunks,
-        include_original,
-        include_translation and has_translation,  # Only include translation if available
-        formats
+    # Start caption generation task
+    process_captions.delay(
+        job_id=caption_job["job_id"],
+        chunks=chunks,
+        include_original=include_original,
+        include_translation=include_translation and has_translation,
+        formats=formats
     )
     
     return serialize_job(caption_job)
-
 async def process_caption_generation(
     job_id: str,
     chunks: List[Dict[str, Any]],
