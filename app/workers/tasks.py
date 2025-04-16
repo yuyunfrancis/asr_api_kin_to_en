@@ -9,7 +9,7 @@ from app.utils.file_utils import clean_temp_file, save_caption_file
 # Configure logging
 logger = logging.getLogger("celery.tasks")
 
-@app.task(bind=True, name="process_transcription")
+# @app.task(bind=True, name="process_transcription")
 def process_transcription(
     self,
     job_id: str,
