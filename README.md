@@ -115,12 +115,43 @@ mkdir -p models_cache temp_files
 
 ### Install Redis if not already installed
 
-- sudo apt update
-- sudo apt install redis-server
+```bash
+  sudo apt update
+  sudo apt install redis-server
+```
 
 ### Start Redis service
 
-- sudo systemctl start redis
+```bash
+ sudo systemctl start redis
+```
+
+## Check if Redis is running
+
+```bash
+ redis-cli ping
+```
+
+## If it returns PONG, Redis is running. If not, start it:
+
+```bash
+sudo systemctl start redis
+```
+
+Start a Celery worker in a separate terminal:
+
+### Navigate to your project directory
+
+```bash
+cd your_project_directory
+
+# Activate your virtual environment if you're using one
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+
+# Start Celery worker
+celery -A app.workers.celery_app worker --loglevel=info
+
+```
 
 1. Clone the repository:
 
